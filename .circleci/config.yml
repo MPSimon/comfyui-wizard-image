@@ -19,29 +19,47 @@ jobs:
           command: |
             echo "$DOCKERHUB_PAT" | docker login -u "$DOCKERHUB_USER" --password-stdin
       - run:
+          name: Compute image tag
+          command: |
+            if [ -n "${CIRCLE_TAG}" ]; then
+              echo "export IMAGE_TAG=${CIRCLE_TAG}" >> "$BASH_ENV"
+            else
+              echo "export IMAGE_TAG=main-${CIRCLE_SHA1:0:7}" >> "$BASH_ENV"
+            fi
+      - run:
           name: Build & push
           command: |
-            TAG="${CIRCLE_TAG:-latest}"
+            source "$BASH_ENV"
             IMG="docker.io/$DOCKERHUB_USER/comfyui-wizard-image"
-            docker build --progress=plain -t "${IMG}:${TAG}" .
-            docker push "${IMG}:${TAG}"
+            docker build --progress=plain -t "${IMG}:${IMAGE_TAG}" .
+            docker push "${IMG}:${IMAGE_TAG}"
       - run:
-          name: Push latest on version tags
+          name: Push latest on main or version tag
           command: |
-            if echo "${CIRCLE_TAG}" | grep -Eq '^v[0-9]+(\.[0-9]+)*$'; then
+            if [ "${CIRCLE_BRANCH}" = "main" ] || echo "${CIRCLE_TAG}" | grep -Eq '^v[0-9]+(\.[0-9]+)*$'; then
+              source "$BASH_ENV"
               IMG="docker.io/$DOCKERHUB_USER/comfyui-wizard-image"
-              docker tag "${IMG}:${CIRCLE_TAG}" "${IMG}:latest"
+              docker tag "${IMG}:${IMAGE_TAG}" "${IMG}:latest"
               docker push "${IMG}:latest"
             fi
 
 workflows:
   version: 2
-  build_on_tag:
+  build_on_main_and_tag:
     jobs:
       - build_and_push:
+          name: build_and_push_main
           context: docker-hub
           filters:
+            branches:
+              only: main
             tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+              ignore: /.*/
+      - build_and_push:
+          name: build_and_push_tag
+          context: docker-hub
+          filters:
             branches:
               ignore: /.*/
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*$/

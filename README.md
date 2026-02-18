@@ -36,6 +36,9 @@ Private, re-owned ComfyUI base image for WAN workflows.
 - `COMFYWIZARD_REPO` default: `https://github.com/MPSimon/ComfyWizard.git`
 
 ## CircleCI release
+- Push to `main`:
+  - builds and pushes `docker.io/<DOCKERHUB_USER>/comfyui-wizard-image:main-<shortsha>`
+  - updates `docker.io/<DOCKERHUB_USER>/comfyui-wizard-image:latest`
 - Tag format: `vX.Y.Z`
 - On tag, CircleCI builds and pushes:
   - `docker.io/<DOCKERHUB_USER>/comfyui-wizard-image:vX.Y.Z`
