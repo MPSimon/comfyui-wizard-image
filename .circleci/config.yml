@@ -28,6 +28,7 @@ jobs:
             fi
       - run:
           name: Build & push
+          no_output_timeout: 45m
           command: |
             source "$BASH_ENV"
             IMG="docker.io/$DOCKERHUB_USER/comfyui-wizard-image"
