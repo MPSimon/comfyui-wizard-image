@@ -1,0 +1,47 @@
+version: 2.1
+
+executors:
+  docker-dind:
+    machine:
+      image: ubuntu-2404:current
+      docker_layer_caching: false
+    environment:
+      DOCKER_BUILDKIT: 1
+      COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+  build_and_push:
+    executor: docker-dind
+    steps:
+      - checkout
+      - run:
+          name: Log in to Docker Hub
+          command: |
+            echo "$DOCKERHUB_PAT" | docker login -u "$DOCKERHUB_USER" --password-stdin
+      - run:
+          name: Build & push
+          command: |
+            TAG="${CIRCLE_TAG:-latest}"
+            IMG="docker.io/$DOCKERHUB_USER/comfyui-wizard-image"
+            docker build --progress=plain -t "${IMG}:${TAG}" .
+            docker push "${IMG}:${TAG}"
+      - run:
+          name: Push latest on version tags
+          command: |
+            if echo "${CIRCLE_TAG}" | grep -Eq '^v[0-9]+(\.[0-9]+)*$'; then
+              IMG="docker.io/$DOCKERHUB_USER/comfyui-wizard-image"
+              docker tag "${IMG}:${CIRCLE_TAG}" "${IMG}:latest"
+              docker push "${IMG}:latest"
+            fi
+
+workflows:
+  version: 2
+  build_on_tag:
+    jobs:
+      - build_and_push:
+          context: docker-hub
+          filters:
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/
