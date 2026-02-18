@@ -32,10 +32,29 @@ jobs:
           command: |
             source "$BASH_ENV"
             IMG="docker.io/$DOCKERHUB_USER/comfyui-wizard-image"
+            (
+              while true; do
+                echo "[keepalive] docker build still running at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+                sleep 60
+              done
+            ) &
+            KEEPALIVE_PID=$!
+
+            set +e
             docker build --progress=plain \
               --build-arg SAGE_CUDA_ARCH_LIST="${SAGE_CUDA_ARCH_LIST:-8.9}" \
               --build-arg SAGE_MAX_JOBS="${SAGE_MAX_JOBS:-8}" \
               -t "${IMG}:${IMAGE_TAG}" .
+            BUILD_RC=$?
+            set -e
+
+            kill "${KEEPALIVE_PID}" >/dev/null 2>&1 || true
+            wait "${KEEPALIVE_PID}" 2>/dev/null || true
+
+            if [ "${BUILD_RC}" -ne 0 ]; then
+              exit "${BUILD_RC}"
+            fi
+
             docker push "${IMG}:${IMAGE_TAG}"
       - run:
           name: Push latest on main or version tag
