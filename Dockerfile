@@ -5,6 +5,11 @@ ARG COMFYUI_MANAGER_REF=f41365abe95723d078ce2946e82dfb7bc6e9d9c7
 ARG SAGEATTENTION_REF=d1a57a546c3d395b1ffcbeecc66d81db76f3b4b5
 ARG COMFYWIZARD_REPO=https://github.com/MPSimon/ComfyWizard.git
 ARG COMFYWIZARD_REF=1fb8d0387792cb00b8e6db76d4af3d08ccd00a21
+ARG IMAGE_SOURCE=https://github.com/MPSimon/comfyui-wizard-image
+
+LABEL org.opencontainers.image.title="ComfyUI Wizard Image" \
+      org.opencontainers.image.description="Private ComfyUI base with prebuilt SageAttention and pinned ComfyWizard" \
+      org.opencontainers.image.source="${IMAGE_SOURCE}"
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
