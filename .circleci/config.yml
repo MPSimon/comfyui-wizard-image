@@ -43,7 +43,9 @@ jobs:
             set +e
             docker build --progress=plain \
               --build-arg SAGE_CUDA_ARCH_LIST="${SAGE_CUDA_ARCH_LIST:-8.9}" \
-              --build-arg SAGE_MAX_JOBS="${SAGE_MAX_JOBS:-8}" \
+              --build-arg SAGE_MAX_JOBS="${SAGE_MAX_JOBS:-4}" \
+              --build-arg SAGE_EXT_PARALLEL="${SAGE_EXT_PARALLEL:-1}" \
+              --build-arg SAGE_NVCC_THREADS="${SAGE_NVCC_THREADS:-2}" \
               -t "${IMG}:${IMAGE_TAG}" .
             BUILD_RC=$?
             set -e

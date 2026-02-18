@@ -5,6 +5,8 @@ ARG COMFYUI_MANAGER_REF=f41365abe95723d078ce2946e82dfb7bc6e9d9c7
 ARG SAGEATTENTION_REF=d1a57a546c3d395b1ffcbeecc66d81db76f3b4b5
 ARG SAGE_CUDA_ARCH_LIST=8.9
 ARG SAGE_MAX_JOBS=8
+ARG SAGE_EXT_PARALLEL=1
+ARG SAGE_NVCC_THREADS=2
 ARG COMFYWIZARD_REPO=https://github.com/MPSimon/ComfyWizard.git
 ARG IMAGE_SOURCE=https://github.com/MPSimon/comfyui-wizard-image
 
@@ -53,6 +55,9 @@ RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git "$COMFY_SEED_ROOT/
 RUN git clone https://github.com/thu-ml/SageAttention.git /tmp/SageAttention \
     && cd /tmp/SageAttention \
     && git checkout "$SAGEATTENTION_REF" \
+    && export EXT_PARALLEL="$SAGE_EXT_PARALLEL" \
+    && export MAX_JOBS="$SAGE_MAX_JOBS" \
+    && export NVCC_APPEND_FLAGS="--threads ${SAGE_NVCC_THREADS}" \
     && set -e; \
        ( while true; do echo "[sageattention-build] compiling... $(date -u +%Y-%m-%dT%H:%M:%SZ)"; sleep 60; done ) & \
        SAGE_HEARTBEAT_PID=$!; \
