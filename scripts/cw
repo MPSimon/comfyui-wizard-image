@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CW_ROOT="${COMFYWIZARD_HOME:-/opt/ComfyWizard}"
+if [ ! -f "$CW_ROOT/bin/sync.sh" ]; then
+  echo "ComfyWizard not found at $CW_ROOT" >&2
+  exit 1
+fi
+
+exec bash "$CW_ROOT/bin/sync.sh" "$@"

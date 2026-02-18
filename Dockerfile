@@ -3,6 +3,8 @@ FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
 ARG COMFYUI_REF=239ddd332724c63934bf517cfc6d0026214d8aee
 ARG COMFYUI_MANAGER_REF=f41365abe95723d078ce2946e82dfb7bc6e9d9c7
 ARG SAGEATTENTION_REF=d1a57a546c3d395b1ffcbeecc66d81db76f3b4b5
+ARG COMFYWIZARD_REPO=https://github.com/MPSimon/ComfyWizard.git
+ARG COMFYWIZARD_REF=1fb8d0387792cb00b8e6db76d4af3d08ccd00a21
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
@@ -10,7 +12,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1 \
     VIRTUAL_ENV=/opt/venv \
     PATH=/opt/venv/bin:$PATH \
-    COMFY_SEED_ROOT=/opt/ComfyUI
+    COMFY_SEED_ROOT=/opt/ComfyUI \
+    COMFYWIZARD_HOME=/opt/ComfyWizard \
+    COMFYWIZARD_REPO=${COMFYWIZARD_REPO}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.12 python3.12-venv python3-pip \
@@ -43,17 +47,24 @@ RUN git clone https://github.com/thu-ml/SageAttention.git /tmp/SageAttention \
     && pip install -e . \
     && rm -rf /tmp/SageAttention
 
+RUN git clone "$COMFYWIZARD_REPO" "$COMFYWIZARD_HOME" \
+    && cd "$COMFYWIZARD_HOME" \
+    && git checkout "$COMFYWIZARD_REF" \
+    && chmod +x bin/sync.sh bin/wizard.sh
+
 RUN python - <<'PY'
-import torch
 import importlib
-assert torch.cuda.is_available() or True
+import torch
 importlib.import_module("sageattention")
-print("Build smoke checks passed")
+assert importlib.import_module("huggingface_hub")
+print(torch.__version__)
 PY
 
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY scripts/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/healthcheck.sh
+COPY scripts/cw /usr/local/bin/cw
+COPY scripts/cw-update-latest /usr/local/bin/cw-update-latest
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/bin/cw /usr/local/bin/cw-update-latest
 
 WORKDIR /workspace
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=5 CMD ["/usr/local/bin/healthcheck.sh"]
