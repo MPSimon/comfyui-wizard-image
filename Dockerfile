@@ -62,7 +62,7 @@ RUN git clone https://github.com/thu-ml/SageAttention.git /tmp/SageAttention \
        ( while true; do echo "[sageattention-build] compiling... $(date -u +%Y-%m-%dT%H:%M:%SZ)"; sleep 60; done ) & \
        SAGE_HEARTBEAT_PID=$!; \
        set +e; \
-       pip install -v --no-build-isolation -e .; \
+       pip install -v --no-build-isolation .; \
        SAGE_RC=$?; \
        set -e; \
        kill "$SAGE_HEARTBEAT_PID" >/dev/null 2>&1 || true; \
