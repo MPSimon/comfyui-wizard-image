@@ -32,7 +32,10 @@ jobs:
           command: |
             source "$BASH_ENV"
             IMG="docker.io/$DOCKERHUB_USER/comfyui-wizard-image"
-            docker build --progress=plain -t "${IMG}:${IMAGE_TAG}" .
+            docker build --progress=plain \
+              --build-arg SAGE_CUDA_ARCH_LIST="${SAGE_CUDA_ARCH_LIST:-8.9}" \
+              --build-arg SAGE_MAX_JOBS="${SAGE_MAX_JOBS:-8}" \
+              -t "${IMG}:${IMAGE_TAG}" .
             docker push "${IMG}:${IMAGE_TAG}"
       - run:
           name: Push latest on main or version tag
