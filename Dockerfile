@@ -3,6 +3,7 @@ FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
 ARG COMFYUI_REF=239ddd332724c63934bf517cfc6d0026214d8aee
 ARG COMFYUI_MANAGER_REF=f41365abe95723d078ce2946e82dfb7bc6e9d9c7
 ARG SAGEATTENTION_REF=d1a57a546c3d395b1ffcbeecc66d81db76f3b4b5
+ARG SAGE_CUDA_ARCH_LIST=8.0;8.6;8.9;9.0
 ARG COMFYWIZARD_REPO=https://github.com/MPSimon/ComfyWizard.git
 ARG IMAGE_SOURCE=https://github.com/MPSimon/comfyui-wizard-image
 
@@ -17,6 +18,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     VIRTUAL_ENV=/opt/venv \
     PATH=/opt/venv/bin:$PATH \
     COMFY_SEED_ROOT=/opt/ComfyUI \
+    TORCH_CUDA_ARCH_LIST=${SAGE_CUDA_ARCH_LIST} \
     COMFYWIZARD_REPO=${COMFYWIZARD_REPO} \
     COMFYWIZARD_BRANCH=main \
     COMFYWIZARD_CHECKOUT=/root/.comfywizard
