@@ -49,7 +49,7 @@ RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git "$COMFY_SEED_ROOT/
 RUN git clone https://github.com/thu-ml/SageAttention.git /tmp/SageAttention \
     && cd /tmp/SageAttention \
     && git checkout "$SAGEATTENTION_REF" \
-    && pip install -e . \
+    && pip install --no-build-isolation -e . \
     && rm -rf /tmp/SageAttention
 
 RUN python - <<'PY'
