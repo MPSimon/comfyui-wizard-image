@@ -24,7 +24,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     COMFYWIZARD_CHECKOUT=/root/.comfywizard
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.12 python3.12-venv python3-pip \
+    python3.12 python3.12-dev python3.12-venv python3-pip \
     git git-lfs curl ca-certificates jq tini rsync \
     build-essential ninja-build pkg-config \
     libgl1 libglib2.0-0 ffmpeg \
