@@ -23,13 +23,14 @@ Private, re-owned ComfyUI base image for WAN workflows.
 1. Container starts.
 2. Requires `ARTIFACT_AUTH` to be present.
 3. Seed ComfyUI is copied to `/workspace/ComfyUI` if missing.
-4. Root launcher `/root/sync-workflow.sh` is created.
+4. Launcher `/workspace/sync-workflow.sh` is created, and `sync-workflow` command is available globally.
 5. code-server starts on `0.0.0.0:8888` (auth disabled).
 6. JupyterLab starts on `0.0.0.0:8889` (token/password disabled).
 7. ComfyUI starts on `0.0.0.0:8188`.
 
 ## Commands
-- `/root/sync-workflow.sh` (recommended, runs `runpod-launch.sh` flow)
+- `sync-workflow` (recommended, runs `runpod-launch.sh` flow)
+- `/workspace/sync-workflow.sh`
 
 ## Contract
 - Hardcoded defaults (non-configurable):
@@ -49,6 +50,11 @@ Private, re-owned ComfyUI base image for WAN workflows.
 - Set env:
   - `ARTIFACT_AUTH=<RunPod Secret>`
   - `HF_HUB_ENABLE_HF_TRANSFER=1` (optional)
+
+## code-server preferences
+- code-server user settings/extensions are stored on `/workspace` and persist with your volume:
+  - settings/state: `/workspace/.code-server/data`
+  - extensions: `/workspace/.code-server/extensions`
 
 ## CircleCI release
 - Push to `main`:

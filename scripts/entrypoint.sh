@@ -9,10 +9,22 @@ COMFYWIZARD_REPO="https://github.com/MPSimon/ComfyWizard.git"
 COMFYWIZARD_BRANCH="main"
 COMFYWIZARD_CHECKOUT="/root/.comfywizard"
 RUNPOD_LAUNCHER="/usr/local/lib/comfywizard/runpod-launch.sh"
+WORKSPACE_LAUNCHER="/workspace/sync-workflow.sh"
+GLOBAL_LAUNCHER="/usr/local/bin/sync-workflow"
+CODE_SERVER_DATA_DIR="/workspace/.code-server/data"
+CODE_SERVER_EXTENSIONS_DIR="/workspace/.code-server/extensions"
 
 start_tools_ui() {
+  mkdir -p "$CODE_SERVER_DATA_DIR" "$CODE_SERVER_EXTENSIONS_DIR"
+
   echo "[comfyui-wizard-image] Starting code-server on 0.0.0.0:8888 (auth=none)"
-  code-server --bind-addr 0.0.0.0:8888 --auth none /workspace >/tmp/code-server.log 2>&1 &
+  code-server \
+    --bind-addr 0.0.0.0:8888 \
+    --auth none \
+    --user-data-dir "$CODE_SERVER_DATA_DIR" \
+    --extensions-dir "$CODE_SERVER_EXTENSIONS_DIR" \
+    /workspace \
+    >/tmp/code-server.log 2>&1 &
   CODE_SERVER_PID=$!
 
   echo "[comfyui-wizard-image] Starting JupyterLab on 0.0.0.0:8889 (no auth)"
@@ -37,13 +49,15 @@ start_tools_ui() {
   fi
 }
 
-write_root_launcher() {
-  cat > /root/sync-workflow.sh <<'EOF'
+write_launchers() {
+  cat > "$WORKSPACE_LAUNCHER" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 exec /usr/local/lib/comfywizard/runpod-launch.sh "$@"
 EOF
-  chmod +x /root/sync-workflow.sh
+  chmod +x "$WORKSPACE_LAUNCHER"
+  ln -sf "$WORKSPACE_LAUNCHER" /root/sync-workflow.sh
+  ln -sf "$WORKSPACE_LAUNCHER" "$GLOBAL_LAUNCHER"
 }
 
 if [[ -z "${ARTIFACT_AUTH:-}" ]]; then
@@ -61,14 +75,15 @@ if command -v nvidia-smi >/dev/null 2>&1 && ! nvidia-smi >/dev/null 2>&1; then
   echo "[comfyui-wizard-image] WARNING: nvidia-smi present but GPU not visible to container"
 fi
 
-write_root_launcher
+write_launchers
 start_tools_ui
 
 echo "[comfyui-wizard-image] ComfyWizard launcher contract: runpod-launch.sh (full repo extraction + wizard)"
-echo "[comfyui-wizard-image] Run wizard: /root/sync-workflow.sh"
+echo "[comfyui-wizard-image] Run wizard: sync-workflow (or /workspace/sync-workflow.sh)"
 echo "[comfyui-wizard-image] ComfyUI: http://<pod>:8188"
 echo "[comfyui-wizard-image] code-server: http://<pod>:8888"
 echo "[comfyui-wizard-image] JupyterLab: http://<pod>:8889"
+echo "[comfyui-wizard-image] code-server settings persisted in: /workspace/.code-server"
 echo "[comfyui-wizard-image] Fixed defaults: COMFY_ROOT=${COMFY_ROOT}, COMFY_PORT=${COMFY_PORT}, COMFYWIZARD_REPO=${COMFYWIZARD_REPO}, COMFYWIZARD_BRANCH=${COMFYWIZARD_BRANCH}, COMFYWIZARD_CHECKOUT=${COMFYWIZARD_CHECKOUT}"
 
 echo "[comfyui-wizard-image] Starting ComfyUI on ${COMFY_BIND}:${COMFY_PORT}"
