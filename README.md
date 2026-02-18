@@ -16,26 +16,39 @@ Private, re-owned ComfyUI base image for WAN workflows.
 - Ship ComfyUI + ComfyUI-Manager preinstalled.
 - Ship SageAttention prebuilt for fast cold boot.
 - Include `hf` CLI support through `huggingface_hub`.
-- Pull latest ComfyWizard on startup and expose `/root/sync-workflow.sh`.
-- Start ComfyUI directly without runtime clone/build steps.
+- Run ComfyWizard through `runpod-launch.sh` (full repo extraction + wizard from extracted root).
+- Start ComfyUI on `8188`, code-server on `8888`, and JupyterLab on `8889`.
 
 ## Startup flow
 1. Container starts.
-2. Seed ComfyUI is copied to `COMFY_ROOT` if missing.
-3. Latest ComfyWizard is pulled from GitHub.
-4. Root launcher `/root/sync-workflow.sh` is created (UI wizard).
-5. ComfyUI starts on `0.0.0.0:${COMFY_PORT:-8188}`.
+2. Requires `ARTIFACT_AUTH` to be present.
+3. Seed ComfyUI is copied to `/workspace/ComfyUI` if missing.
+4. Root launcher `/root/sync-workflow.sh` is created.
+5. code-server starts on `0.0.0.0:8888` (auth disabled).
+6. JupyterLab starts on `0.0.0.0:8889` (token/password disabled).
+7. ComfyUI starts on `0.0.0.0:8188`.
 
 ## Commands
-- `/root/sync-workflow.sh` (interactive wizard UI, recommended)
-- `/root/.comfywizard/bin/sync.sh --stack wan --workflow WAN2-2-Animate-TinyDeps` (advanced non-interactive)
+- `/root/sync-workflow.sh` (recommended, runs `runpod-launch.sh` flow)
 
-## Environment
-- `COMFY_ROOT` default: `/workspace/ComfyUI`
-- `COMFY_PORT` default: `8188`
-- `COMFYWIZARD_REPO` default: `https://github.com/MPSimon/ComfyWizard.git`
-- `COMFYWIZARD_BRANCH` default: `main`
-- `COMFYWIZARD_CHECKOUT` default: `/root/.comfywizard`
+## Contract
+- Hardcoded defaults (non-configurable):
+  - `COMFY_ROOT=/workspace/ComfyUI`
+  - `COMFY_PORT=8188`
+  - `COMFYWIZARD_REPO=https://github.com/MPSimon/ComfyWizard.git`
+  - `COMFYWIZARD_BRANCH=main`
+  - `COMFYWIZARD_CHECKOUT=/root/.comfywizard`
+- Required env:
+  - `ARTIFACT_AUTH`
+- Optional env:
+  - `HF_HUB_ENABLE_HF_TRANSFER=1`
+
+## RunPod template
+- Image: `docker.io/mpsimon/comfyui-wizard-image:latest`
+- Expose ports: `8188`, `8888`, `8889`
+- Set env:
+  - `ARTIFACT_AUTH=<RunPod Secret>`
+  - `HF_HUB_ENABLE_HF_TRANSFER=1` (optional)
 
 ## CircleCI release
 - Push to `main`:

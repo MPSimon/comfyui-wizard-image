@@ -7,7 +7,6 @@ ARG SAGE_CUDA_ARCH_LIST=8.9
 ARG SAGE_MAX_JOBS=8
 ARG SAGE_EXT_PARALLEL=1
 ARG SAGE_NVCC_THREADS=2
-ARG COMFYWIZARD_REPO=https://github.com/MPSimon/ComfyWizard.git
 ARG IMAGE_SOURCE=https://github.com/MPSimon/comfyui-wizard-image
 
 LABEL org.opencontainers.image.title="ComfyUI Wizard Image" \
@@ -22,10 +21,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PATH=/opt/venv/bin:$PATH \
     COMFY_SEED_ROOT=/opt/ComfyUI \
     TORCH_CUDA_ARCH_LIST=${SAGE_CUDA_ARCH_LIST} \
-    MAX_JOBS=${SAGE_MAX_JOBS} \
-    COMFYWIZARD_REPO=${COMFYWIZARD_REPO} \
-    COMFYWIZARD_BRANCH=main \
-    COMFYWIZARD_CHECKOUT=/root/.comfywizard
+    MAX_JOBS=${SAGE_MAX_JOBS}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.12 python3.12-dev python3.12-venv python3-pip \
@@ -40,7 +36,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN pip install --upgrade pip setuptools wheel \
     && pip install --index-url https://download.pytorch.org/whl/cu128 torch torchvision torchaudio \
-    && pip install huggingface_hub==0.35.3
+    && pip install huggingface_hub==0.35.3 jupyterlab==4.4.0
+
+RUN curl -fsSL https://code-server.dev/install.sh | sh
 
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git "$COMFY_SEED_ROOT" \
     && cd "$COMFY_SEED_ROOT" \
@@ -80,8 +78,10 @@ PY
 
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY scripts/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/healthcheck.sh
+COPY scripts/runpod-launch.sh /usr/local/lib/comfywizard/runpod-launch.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/lib/comfywizard/runpod-launch.sh
 
 WORKDIR /workspace
+EXPOSE 8188 8888 8889
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=5 CMD ["/usr/local/bin/healthcheck.sh"]
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
