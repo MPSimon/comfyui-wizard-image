@@ -51,15 +51,9 @@ Private, re-owned ComfyUI base image for WAN workflows.
   - `ARTIFACT_AUTH=<RunPod Secret>`
   - `HF_HUB_ENABLE_HF_TRANSFER=1` (optional)
 
-## code-server preferences
-- code-server user settings/extensions are stored on `/workspace` and persist with your volume:
-  - settings/state: `/workspace/.code-server/data`
-  - extensions: `/workspace/.code-server/extensions`
-
 ## CircleCI release
 - Push to `main`:
   - builds and pushes `docker.io/<DOCKERHUB_USER>/comfyui-wizard-image:main-<shortsha>`
-  - updates `docker.io/<DOCKERHUB_USER>/comfyui-wizard-image:latest`
 - Tag format: `vX.Y.Z`
 - On tag, CircleCI builds and pushes:
   - `docker.io/<DOCKERHUB_USER>/comfyui-wizard-image:vX.Y.Z`

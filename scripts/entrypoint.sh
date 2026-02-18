@@ -11,18 +11,12 @@ COMFYWIZARD_CHECKOUT="/root/.comfywizard"
 RUNPOD_LAUNCHER="/usr/local/lib/comfywizard/runpod-launch.sh"
 WORKSPACE_LAUNCHER="/workspace/sync-workflow.sh"
 GLOBAL_LAUNCHER="/usr/local/bin/sync-workflow"
-CODE_SERVER_DATA_DIR="/workspace/.code-server/data"
-CODE_SERVER_EXTENSIONS_DIR="/workspace/.code-server/extensions"
 
 start_tools_ui() {
-  mkdir -p "$CODE_SERVER_DATA_DIR" "$CODE_SERVER_EXTENSIONS_DIR"
-
   echo "[comfyui-wizard-image] Starting code-server on 0.0.0.0:8888 (auth=none)"
   code-server \
     --bind-addr 0.0.0.0:8888 \
     --auth none \
-    --user-data-dir "$CODE_SERVER_DATA_DIR" \
-    --extensions-dir "$CODE_SERVER_EXTENSIONS_DIR" \
     /workspace \
     >/tmp/code-server.log 2>&1 &
   CODE_SERVER_PID=$!
@@ -83,7 +77,6 @@ echo "[comfyui-wizard-image] Run wizard: sync-workflow (or /workspace/sync-workf
 echo "[comfyui-wizard-image] ComfyUI: http://<pod>:8188"
 echo "[comfyui-wizard-image] code-server: http://<pod>:8888"
 echo "[comfyui-wizard-image] JupyterLab: http://<pod>:8889"
-echo "[comfyui-wizard-image] code-server settings persisted in: /workspace/.code-server"
 echo "[comfyui-wizard-image] Fixed defaults: COMFY_ROOT=${COMFY_ROOT}, COMFY_PORT=${COMFY_PORT}, COMFYWIZARD_REPO=${COMFYWIZARD_REPO}, COMFYWIZARD_BRANCH=${COMFYWIZARD_BRANCH}, COMFYWIZARD_CHECKOUT=${COMFYWIZARD_CHECKOUT}"
 
 echo "[comfyui-wizard-image] Starting ComfyUI on ${COMFY_BIND}:${COMFY_PORT}"

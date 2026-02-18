@@ -59,9 +59,9 @@ jobs:
 
             docker push "${IMG}:${IMAGE_TAG}"
       - run:
-          name: Push latest on main or version tag
+          name: Push latest on version tag
           command: |
-            if [ "${CIRCLE_BRANCH}" = "main" ] || echo "${CIRCLE_TAG}" | grep -Eq '^v[0-9]+(\.[0-9]+)*$'; then
+            if echo "${CIRCLE_TAG}" | grep -Eq '^v[0-9]+(\.[0-9]+)*$'; then
               source "$BASH_ENV"
               IMG="docker.io/$DOCKERHUB_USER/comfyui-wizard-image"
               docker tag "${IMG}:${IMAGE_TAG}" "${IMG}:latest"
