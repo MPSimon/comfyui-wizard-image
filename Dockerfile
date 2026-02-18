@@ -53,7 +53,16 @@ RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git "$COMFY_SEED_ROOT/
 RUN git clone https://github.com/thu-ml/SageAttention.git /tmp/SageAttention \
     && cd /tmp/SageAttention \
     && git checkout "$SAGEATTENTION_REF" \
-    && pip install --no-build-isolation -e . \
+    && set -e; \
+       ( while true; do echo "[sageattention-build] compiling... $(date -u +%Y-%m-%dT%H:%M:%SZ)"; sleep 60; done ) & \
+       SAGE_HEARTBEAT_PID=$!; \
+       set +e; \
+       pip install -v --no-build-isolation -e .; \
+       SAGE_RC=$?; \
+       set -e; \
+       kill "$SAGE_HEARTBEAT_PID" >/dev/null 2>&1 || true; \
+       wait "$SAGE_HEARTBEAT_PID" 2>/dev/null || true; \
+       test "$SAGE_RC" -eq 0 \
     && rm -rf /tmp/SageAttention
 
 RUN python - <<'PY'
