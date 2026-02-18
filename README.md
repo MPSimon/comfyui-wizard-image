@@ -16,24 +16,26 @@ Private, re-owned ComfyUI base image for WAN workflows.
 - Ship ComfyUI + ComfyUI-Manager preinstalled.
 - Ship SageAttention prebuilt for fast cold boot.
 - Include `hf` CLI support through `huggingface_hub`.
-- Include pinned ComfyWizard and expose `cw` command.
+- Pull latest ComfyWizard on startup and expose `/root/sync-workflow.sh`.
 - Start ComfyUI directly without runtime clone/build steps.
 
 ## Startup flow
 1. Container starts.
 2. Seed ComfyUI is copied to `COMFY_ROOT` if missing.
-3. ComfyUI starts on `0.0.0.0:${COMFY_PORT:-8188}`.
-4. You run `cw ...` to sync workflow assets.
+3. Latest ComfyWizard is pulled from GitHub.
+4. Root launcher `/root/sync-workflow.sh` is created (UI wizard).
+5. ComfyUI starts on `0.0.0.0:${COMFY_PORT:-8188}`.
 
 ## Commands
-- `cw --stack wan --workflow WAN2-2-Animate-TinyDeps`
-- `cw-update-latest` (manual opt-in update from ComfyWizard `main`)
+- `/root/sync-workflow.sh` (interactive wizard UI, recommended)
+- `/root/.comfywizard/bin/sync.sh --stack wan --workflow WAN2-2-Animate-TinyDeps` (advanced non-interactive)
 
 ## Environment
 - `COMFY_ROOT` default: `/workspace/ComfyUI`
 - `COMFY_PORT` default: `8188`
-- `COMFYWIZARD_HOME` default: `/opt/ComfyWizard`
 - `COMFYWIZARD_REPO` default: `https://github.com/MPSimon/ComfyWizard.git`
+- `COMFYWIZARD_BRANCH` default: `main`
+- `COMFYWIZARD_CHECKOUT` default: `/root/.comfywizard`
 
 ## CircleCI release
 - Push to `main`:
