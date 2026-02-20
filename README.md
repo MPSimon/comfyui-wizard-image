@@ -31,6 +31,10 @@ Private, re-owned ComfyUI base image for WAN workflows.
 ## Commands
 - `sync-workflow` (recommended, runs `runpod-launch.sh` flow)
 - `/workspace/sync-workflow.sh`
+- `hf-model` (download a single HF file from repo-id+path or URL)
+- `/workspace/hf-model.sh`
+- `civitai-model` (download from CivitAI model/version id or URL)
+- `/workspace/civitai-model.sh`
 
 ## Contract
 - Hardcoded defaults (non-configurable):
@@ -43,6 +47,8 @@ Private, re-owned ComfyUI base image for WAN workflows.
   - `ARTIFACT_AUTH`
 - Optional env:
   - `HF_HUB_ENABLE_HF_TRANSFER=1`
+  - `HF_TOKEN` (for gated/private Hugging Face repos)
+  - `CIVITAI_TOKEN` (for gated/private CivitAI downloads)
 
 ## RunPod template
 - Image: `docker.io/mpsimon/comfyui-wizard-image:latest`
@@ -50,6 +56,8 @@ Private, re-owned ComfyUI base image for WAN workflows.
 - Set env:
   - `ARTIFACT_AUTH=<RunPod Secret>`
   - `HF_HUB_ENABLE_HF_TRANSFER=1` (optional)
+  - `HF_TOKEN=<HF token>` (optional)
+  - `CIVITAI_TOKEN=<CivitAI token>` (optional)
 
 ## CircleCI release
 - Push to `main`:

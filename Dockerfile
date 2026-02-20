@@ -79,7 +79,9 @@ PY
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY scripts/healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY scripts/runpod-launch.sh /usr/local/lib/comfywizard/runpod-launch.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/lib/comfywizard/runpod-launch.sh
+COPY scripts/hf-model.sh /usr/local/lib/comfywizard/hf-model.sh
+COPY scripts/civitai-model.sh /usr/local/lib/comfywizard/civitai-model.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/lib/comfywizard/runpod-launch.sh /usr/local/lib/comfywizard/hf-model.sh /usr/local/lib/comfywizard/civitai-model.sh
 
 WORKDIR /workspace
 EXPOSE 8188 8888 8889

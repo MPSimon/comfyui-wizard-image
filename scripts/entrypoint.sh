@@ -11,6 +11,12 @@ COMFYWIZARD_CHECKOUT="/root/.comfywizard"
 RUNPOD_LAUNCHER="/usr/local/lib/comfywizard/runpod-launch.sh"
 WORKSPACE_LAUNCHER="/workspace/sync-workflow.sh"
 GLOBAL_LAUNCHER="/usr/local/bin/sync-workflow"
+HF_HELPER_SOURCE="/usr/local/lib/comfywizard/hf-model.sh"
+CIVITAI_HELPER_SOURCE="/usr/local/lib/comfywizard/civitai-model.sh"
+WORKSPACE_HF_HELPER="/workspace/hf-model.sh"
+WORKSPACE_CIVITAI_HELPER="/workspace/civitai-model.sh"
+GLOBAL_HF_HELPER="/usr/local/bin/hf-model"
+GLOBAL_CIVITAI_HELPER="/usr/local/bin/civitai-model"
 
 start_tools_ui() {
   echo "[comfyui-wizard-image] Starting code-server on 0.0.0.0:8888 (auth=none)"
@@ -52,6 +58,22 @@ EOF
   chmod +x "$WORKSPACE_LAUNCHER"
   ln -sf "$WORKSPACE_LAUNCHER" /root/sync-workflow.sh
   ln -sf "$WORKSPACE_LAUNCHER" "$GLOBAL_LAUNCHER"
+
+  if [[ -x "$HF_HELPER_SOURCE" ]]; then
+    ln -sf "$HF_HELPER_SOURCE" "$WORKSPACE_HF_HELPER"
+    ln -sf "$WORKSPACE_HF_HELPER" /root/hf-model.sh
+    ln -sf "$WORKSPACE_HF_HELPER" "$GLOBAL_HF_HELPER"
+  else
+    echo "[comfyui-wizard-image] WARNING: missing HF helper script at $HF_HELPER_SOURCE"
+  fi
+
+  if [[ -x "$CIVITAI_HELPER_SOURCE" ]]; then
+    ln -sf "$CIVITAI_HELPER_SOURCE" "$WORKSPACE_CIVITAI_HELPER"
+    ln -sf "$WORKSPACE_CIVITAI_HELPER" /root/civitai-model.sh
+    ln -sf "$WORKSPACE_CIVITAI_HELPER" "$GLOBAL_CIVITAI_HELPER"
+  else
+    echo "[comfyui-wizard-image] WARNING: missing CivitAI helper script at $CIVITAI_HELPER_SOURCE"
+  fi
 }
 
 if [[ -z "${ARTIFACT_AUTH:-}" ]]; then
@@ -74,6 +96,8 @@ start_tools_ui
 
 echo "[comfyui-wizard-image] ComfyWizard launcher contract: runpod-launch.sh (full repo extraction + wizard)"
 echo "[comfyui-wizard-image] Run wizard: sync-workflow (or /workspace/sync-workflow.sh)"
+echo "[comfyui-wizard-image] HF helper: hf-model (or /workspace/hf-model.sh)"
+echo "[comfyui-wizard-image] CivitAI helper: civitai-model (or /workspace/civitai-model.sh)"
 echo "[comfyui-wizard-image] ComfyUI: http://<pod>:8188"
 echo "[comfyui-wizard-image] code-server: http://<pod>:8888"
 echo "[comfyui-wizard-image] JupyterLab: http://<pod>:8889"
