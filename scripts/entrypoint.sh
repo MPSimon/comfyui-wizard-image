@@ -17,8 +17,53 @@ WORKSPACE_HF_HELPER="/workspace/hf-model.sh"
 WORKSPACE_CIVITAI_HELPER="/workspace/civitai-model.sh"
 GLOBAL_HF_HELPER="/usr/local/bin/hf-model"
 GLOBAL_CIVITAI_HELPER="/usr/local/bin/civitai-model"
+SSH_DIR="/root/.ssh"
+AUTHORIZED_KEYS="${SSH_DIR}/authorized_keys"
+
+append_unique_keys() {
+  local key_block="$1"
+
+  if [[ -z "${key_block}" ]]; then
+    return 0
+  fi
+
+  while IFS= read -r key_line; do
+    [[ -z "${key_line// }" ]] && continue
+    if [[ ! -f "$AUTHORIZED_KEYS" ]] || ! grep -Fxq "$key_line" "$AUTHORIZED_KEYS"; then
+      printf '%s\n' "$key_line" >> "$AUTHORIZED_KEYS"
+    fi
+  done <<< "$key_block"
+}
+
+start_sshd() {
+  echo "[comfyui-wizard-image] Preparing SSH daemon"
+  mkdir -p "$SSH_DIR" /run/sshd
+  chmod 700 "$SSH_DIR"
+  touch "$AUTHORIZED_KEYS"
+
+  # Keep RunPod-injected keys and append env keys without duplicates.
+  append_unique_keys "${PUBLIC_KEY:-}"
+  append_unique_keys "${SSH_PUBLIC_KEY:-}"
+  chmod 600 "$AUTHORIZED_KEYS"
+
+  if [[ ! -s "$AUTHORIZED_KEYS" ]]; then
+    echo "[comfyui-wizard-image] WARNING: /root/.ssh/authorized_keys is empty; SSH login may fail until keys are injected."
+  fi
+
+  ssh-keygen -A >/dev/null 2>&1 || true
+  /usr/sbin/sshd -D >/tmp/sshd.log 2>&1 &
+  SSHD_PID=$!
+
+  sleep 1
+  if ! kill -0 "$SSHD_PID" >/dev/null 2>&1; then
+    echo "[comfyui-wizard-image] ERROR: sshd failed to start. See /tmp/sshd.log" >&2
+    exit 1
+  fi
+}
 
 start_tools_ui() {
+  export SHELL=/bin/bash
+
   echo "[comfyui-wizard-image] Starting code-server on 0.0.0.0:8888 (auth=none)"
   code-server \
     --bind-addr 0.0.0.0:8888 \
@@ -35,6 +80,7 @@ start_tools_ui() {
     --no-browser \
     --ServerApp.token='' \
     --ServerApp.password='' \
+    --ServerApp.terminals_enabled=True \
     --notebook-dir=/workspace \
     >/tmp/jupyter.log 2>&1 &
   JUPYTER_PID=$!
@@ -92,6 +138,7 @@ if command -v nvidia-smi >/dev/null 2>&1 && ! nvidia-smi >/dev/null 2>&1; then
 fi
 
 write_launchers
+start_sshd
 start_tools_ui
 
 echo "[comfyui-wizard-image] ComfyWizard launcher contract: runpod-launch.sh (full repo extraction + wizard)"
@@ -99,6 +146,7 @@ echo "[comfyui-wizard-image] Run wizard: sync-workflow (or /workspace/sync-workf
 echo "[comfyui-wizard-image] HF helper: hf-model (or /workspace/hf-model.sh)"
 echo "[comfyui-wizard-image] CivitAI helper: civitai-model (or /workspace/civitai-model.sh)"
 echo "[comfyui-wizard-image] ComfyUI: http://<pod>:8188"
+echo "[comfyui-wizard-image] SSH/SCP/SFTP: tcp://<public-ip>:<mapped-port> -> :22"
 echo "[comfyui-wizard-image] code-server: http://<pod>:8888"
 echo "[comfyui-wizard-image] JupyterLab: http://<pod>:8889"
 echo "[comfyui-wizard-image] Fixed defaults: COMFY_ROOT=${COMFY_ROOT}, COMFY_PORT=${COMFY_PORT}, COMFYWIZARD_REPO=${COMFYWIZARD_REPO}, COMFYWIZARD_BRANCH=${COMFYWIZARD_BRANCH}, COMFYWIZARD_CHECKOUT=${COMFYWIZARD_CHECKOUT}"

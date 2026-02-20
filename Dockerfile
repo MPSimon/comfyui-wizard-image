@@ -26,17 +26,27 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.12 python3.12-dev python3.12-venv python3-pip \
     git git-lfs curl ca-certificates jq tini rsync \
+    openssh-server \
     build-essential ninja-build pkg-config \
     libgl1 libglib2.0-0 ffmpeg \
     && ln -sf /usr/bin/python3.12 /usr/bin/python \
     && ln -sf /usr/bin/pip3 /usr/bin/pip \
     && python -m venv "$VIRTUAL_ENV" \
     && git lfs install \
+    && mkdir -p /run/sshd \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip setuptools wheel \
     && pip install --index-url https://download.pytorch.org/whl/cu128 torch torchvision torchaudio \
-    && pip install huggingface_hub==0.35.3 jupyterlab==4.4.0
+    && pip install huggingface_hub==0.35.3 jupyterlab==4.4.0 terminado
+
+RUN mkdir -p /etc/ssh/sshd_config.d \
+    && cat > /etc/ssh/sshd_config.d/50-comfyui-wizard.conf <<'EOF'
+PermitRootLogin prohibit-password
+PasswordAuthentication no
+PubkeyAuthentication yes
+ChallengeResponseAuthentication no
+EOF
 
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
@@ -84,6 +94,6 @@ COPY scripts/civitai-model.sh /usr/local/lib/comfywizard/civitai-model.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/lib/comfywizard/runpod-launch.sh /usr/local/lib/comfywizard/hf-model.sh /usr/local/lib/comfywizard/civitai-model.sh
 
 WORKDIR /workspace
-EXPOSE 8188 8888 8889
+EXPOSE 22 8188 8888 8889
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=5 CMD ["/usr/local/bin/healthcheck.sh"]
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
