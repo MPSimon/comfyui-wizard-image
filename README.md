@@ -40,6 +40,7 @@ Wan attention mode guidance:
 9. ComfyUI starts on `0.0.0.0:8188`.
 
 At startup, the container prints an attention backend sanity block (torch/cuda/cc + Sage package availability). On Blackwell cards it installs `sageattn3` from bundled source if missing.
+On Blackwell cards, startup also patches WanVideoWrapper so `attention_mode=sageattn` routes to Sage3 automatically (safety fallback for stale workflows).
 
 ## Commands
 - `sync-workflow` (recommended, runs `runpod-launch.sh` flow)

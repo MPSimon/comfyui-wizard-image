@@ -20,6 +20,49 @@ GLOBAL_HF_HELPER="/usr/local/bin/hf-model"
 GLOBAL_CIVITAI_HELPER="/usr/local/bin/civitai-model"
 SSH_DIR="/root/.ssh"
 AUTHORIZED_KEYS="${SSH_DIR}/authorized_keys"
+WAN_ATTN_FILE="${COMFY_ROOT}/custom_nodes/ComfyUI-WanVideoWrapper/wanvideo/modules/attention.py"
+
+apply_blackwell_wan_attention_patch() {
+  if [[ ! -f "$WAN_ATTN_FILE" ]]; then
+    echo "[comfyui-wizard-image] WanVideoWrapper attention file not found yet, skipping Blackwell patch"
+    return 0
+  fi
+
+  if ! python - <<'PY'
+import torch
+if not torch.cuda.is_available():
+    raise SystemExit(1)
+major, _minor = torch.cuda.get_device_capability(0)
+raise SystemExit(0 if major >= 12 else 1)
+PY
+  then
+    return 0
+  fi
+
+  python - <<'PY'
+from pathlib import Path
+import shutil
+
+p = Path("/workspace/ComfyUI/custom_nodes/ComfyUI-WanVideoWrapper/wanvideo/modules/attention.py")
+s = p.read_text()
+needle = """    elif attention_mode == 'sageattn':
+        return sageattn_func(q, k, v, tensor_layout="NHD").contiguous()"""
+replacement = """    elif attention_mode == 'sageattn':
+        if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] >= 12:
+            return sageattn_blackwell(q.transpose(1,2), k.transpose(1,2), v.transpose(1,2), per_block_mean=False).transpose(1,2).contiguous()
+        return sageattn_func(q, k, v, tensor_layout="NHD").contiguous()"""
+
+if replacement in s:
+    print("[comfyui-wizard-image] Blackwell Wan attention patch already present")
+elif needle in s:
+    backup = p.with_suffix(p.suffix + ".bak-blackwell")
+    shutil.copy2(p, backup)
+    p.write_text(s.replace(needle, replacement))
+    print(f"[comfyui-wizard-image] Applied Blackwell Wan attention patch (backup: {backup})")
+else:
+    print("[comfyui-wizard-image] WARNING: Expected Wan attention snippet not found; patch skipped")
+PY
+}
 
 append_unique_keys() {
   local key_block="$1"
@@ -141,6 +184,7 @@ fi
 if [[ -x "$SAGE_BOOTSTRAP" ]]; then
   "$SAGE_BOOTSTRAP"
 fi
+apply_blackwell_wan_attention_patch
 
 write_launchers
 start_sshd
