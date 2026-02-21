@@ -20,6 +20,9 @@ Private, re-owned ComfyUI base image for WAN workflows.
 - Start SSH daemon for direct TCP SSH/SCP/SFTP on internal port `22`.
 - Start ComfyUI on `8188`, code-server on `8888`, and JupyterLab on `8889`.
 
+Default SageAttention CUDA arch list includes both Ada and Blackwell:
+- `SAGE_CUDA_ARCH_LIST=8.9;9.0;12.0`
+
 ## Startup flow
 1. Container starts.
 2. Requires `ARTIFACT_AUTH` to be present.
