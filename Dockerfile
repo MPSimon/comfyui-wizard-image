@@ -60,8 +60,8 @@ RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git "$COMFY_SEED_ROOT/
     && git checkout "$COMFYUI_MANAGER_REF" \
     && if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-RUN git clone https://github.com/thu-ml/SageAttention.git /tmp/SageAttention \
-    && cd /tmp/SageAttention \
+RUN git clone https://github.com/thu-ml/SageAttention.git /opt/SageAttention \
+    && cd /opt/SageAttention \
     && git checkout "$SAGEATTENTION_REF" \
     && export EXT_PARALLEL="$SAGE_EXT_PARALLEL" \
     && export MAX_JOBS="$SAGE_MAX_JOBS" \
@@ -76,7 +76,9 @@ RUN git clone https://github.com/thu-ml/SageAttention.git /tmp/SageAttention \
        kill "$SAGE_HEARTBEAT_PID" >/dev/null 2>&1 || true; \
        wait "$SAGE_HEARTBEAT_PID" 2>/dev/null || true; \
        test "$SAGE_RC" -eq 0 \
-    && rm -rf /tmp/SageAttention
+    && if [ -d /opt/SageAttention/sageattention3_blackwell/csrc ] && [ ! -d /opt/SageAttention/sageattention3_blackwell/csrc/cutlass ]; then \
+         git clone --depth 1 https://github.com/NVIDIA/cutlass.git /opt/SageAttention/sageattention3_blackwell/csrc/cutlass; \
+       fi
 
 RUN python - <<'PY'
 import importlib
@@ -87,11 +89,12 @@ print(torch.__version__)
 PY
 
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY scripts/ensure-sage-attention.sh /usr/local/lib/comfywizard/ensure-sage-attention.sh
 COPY scripts/healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY scripts/runpod-launch.sh /usr/local/lib/comfywizard/runpod-launch.sh
 COPY scripts/hf-model.sh /usr/local/lib/comfywizard/hf-model.sh
 COPY scripts/civitai-model.sh /usr/local/lib/comfywizard/civitai-model.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/lib/comfywizard/runpod-launch.sh /usr/local/lib/comfywizard/hf-model.sh /usr/local/lib/comfywizard/civitai-model.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/lib/comfywizard/ensure-sage-attention.sh /usr/local/bin/healthcheck.sh /usr/local/lib/comfywizard/runpod-launch.sh /usr/local/lib/comfywizard/hf-model.sh /usr/local/lib/comfywizard/civitai-model.sh
 
 WORKDIR /workspace
 EXPOSE 22 8188 8888 8889

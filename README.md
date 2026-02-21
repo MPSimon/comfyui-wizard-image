@@ -14,7 +14,8 @@ Private, re-owned ComfyUI base image for WAN workflows.
 
 ## Docker image should
 - Ship ComfyUI + ComfyUI-Manager preinstalled.
-- Ship SageAttention prebuilt for fast cold boot.
+- Ship SageAttention (v2) prebuilt for fast cold boot.
+- Auto-bootstrap SageAttention3 on Blackwell GPUs (RTX 50xx) at container start.
 - Include `hf` CLI support through `huggingface_hub`.
 - Run ComfyWizard through `runpod-launch.sh` (full repo extraction + wizard from extracted root).
 - Start SSH daemon for direct TCP SSH/SCP/SFTP on internal port `22`.
@@ -22,6 +23,10 @@ Private, re-owned ComfyUI base image for WAN workflows.
 
 Default SageAttention CUDA arch list includes both Ada and Blackwell:
 - `SAGE_CUDA_ARCH_LIST=8.9;9.0;12.0`
+
+Wan attention mode guidance:
+- RTX 50xx (Blackwell): use `sageattn_3`
+- RTX 40xx (Ada): use `sageattn`
 
 ## Startup flow
 1. Container starts.
@@ -33,6 +38,8 @@ Default SageAttention CUDA arch list includes both Ada and Blackwell:
 7. code-server starts on `0.0.0.0:8888` (auth disabled).
 8. JupyterLab starts on `0.0.0.0:8889` (token/password disabled, terminals enabled).
 9. ComfyUI starts on `0.0.0.0:8188`.
+
+At startup, the container prints an attention backend sanity block (torch/cuda/cc + Sage package availability). On Blackwell cards it installs `sageattn3` from bundled source if missing.
 
 ## Commands
 - `sync-workflow` (recommended, runs `runpod-launch.sh` flow)

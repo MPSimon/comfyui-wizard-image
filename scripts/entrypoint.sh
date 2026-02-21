@@ -9,6 +9,7 @@ COMFYWIZARD_REPO="https://github.com/MPSimon/ComfyWizard.git"
 COMFYWIZARD_BRANCH="main"
 COMFYWIZARD_CHECKOUT="/root/.comfywizard"
 RUNPOD_LAUNCHER="/usr/local/lib/comfywizard/runpod-launch.sh"
+SAGE_BOOTSTRAP="/usr/local/lib/comfywizard/ensure-sage-attention.sh"
 WORKSPACE_LAUNCHER="/workspace/sync-workflow.sh"
 GLOBAL_LAUNCHER="/usr/local/bin/sync-workflow"
 HF_HELPER_SOURCE="/usr/local/lib/comfywizard/hf-model.sh"
@@ -135,6 +136,10 @@ fi
 
 if command -v nvidia-smi >/dev/null 2>&1 && ! nvidia-smi >/dev/null 2>&1; then
   echo "[comfyui-wizard-image] WARNING: nvidia-smi present but GPU not visible to container"
+fi
+
+if [[ -x "$SAGE_BOOTSTRAP" ]]; then
+  "$SAGE_BOOTSTRAP"
 fi
 
 write_launchers
