@@ -94,7 +94,8 @@ COPY scripts/healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY scripts/runpod-launch.sh /usr/local/lib/comfywizard/runpod-launch.sh
 COPY scripts/hf-model.sh /usr/local/lib/comfywizard/hf-model.sh
 COPY scripts/civitai-model.sh /usr/local/lib/comfywizard/civitai-model.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/lib/comfywizard/ensure-sage-attention.sh /usr/local/bin/healthcheck.sh /usr/local/lib/comfywizard/runpod-launch.sh /usr/local/lib/comfywizard/hf-model.sh /usr/local/lib/comfywizard/civitai-model.sh
+COPY scripts/workflow-install.sh /usr/local/lib/comfywizard/workflow-install.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/lib/comfywizard/ensure-sage-attention.sh /usr/local/bin/healthcheck.sh /usr/local/lib/comfywizard/runpod-launch.sh /usr/local/lib/comfywizard/hf-model.sh /usr/local/lib/comfywizard/civitai-model.sh /usr/local/lib/comfywizard/workflow-install.sh
 
 WORKDIR /workspace
 EXPOSE 22 8188 8888 8889

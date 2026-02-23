@@ -18,6 +18,9 @@ WORKSPACE_HF_HELPER="/workspace/hf-model.sh"
 WORKSPACE_CIVITAI_HELPER="/workspace/civitai-model.sh"
 GLOBAL_HF_HELPER="/usr/local/bin/hf-model"
 GLOBAL_CIVITAI_HELPER="/usr/local/bin/civitai-model"
+WORKFLOW_INSTALL_SOURCE="/usr/local/lib/comfywizard/workflow-install.sh"
+WORKSPACE_WORKFLOW_INSTALL="/workspace/workflow-install.sh"
+GLOBAL_WORKFLOW_INSTALL="/usr/local/bin/workflow-install"
 SSH_DIR="/root/.ssh"
 AUTHORIZED_KEYS="${SSH_DIR}/authorized_keys"
 WAN_ATTN_FILE="${COMFY_ROOT}/custom_nodes/ComfyUI-WanVideoWrapper/wanvideo/modules/attention.py"
@@ -164,6 +167,14 @@ EOF
   else
     echo "[comfyui-wizard-image] WARNING: missing CivitAI helper script at $CIVITAI_HELPER_SOURCE"
   fi
+
+  if [[ -x "$WORKFLOW_INSTALL_SOURCE" ]]; then
+    ln -sf "$WORKFLOW_INSTALL_SOURCE" "$WORKSPACE_WORKFLOW_INSTALL"
+    ln -sf "$WORKSPACE_WORKFLOW_INSTALL" /root/workflow-install.sh
+    ln -sf "$WORKSPACE_WORKFLOW_INSTALL" "$GLOBAL_WORKFLOW_INSTALL"
+  else
+    echo "[comfyui-wizard-image] WARNING: missing workflow install script at $WORKFLOW_INSTALL_SOURCE"
+  fi
 }
 
 if [[ -z "${ARTIFACT_AUTH:-}" ]]; then
@@ -192,6 +203,7 @@ start_tools_ui
 
 echo "[comfyui-wizard-image] ComfyWizard launcher contract: runpod-launch.sh (full repo extraction + wizard)"
 echo "[comfyui-wizard-image] Run wizard: sync-workflow (or /workspace/sync-workflow.sh)"
+echo "[comfyui-wizard-image] One-command installer: workflow-install (or /workspace/workflow-install.sh)"
 echo "[comfyui-wizard-image] HF helper: hf-model (or /workspace/hf-model.sh)"
 echo "[comfyui-wizard-image] CivitAI helper: civitai-model (or /workspace/civitai-model.sh)"
 echo "[comfyui-wizard-image] ComfyUI: http://<pod>:8188"

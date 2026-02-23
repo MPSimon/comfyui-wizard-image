@@ -45,6 +45,8 @@ On Blackwell cards, startup also patches WanVideoWrapper so `attention_mode=sage
 ## Commands
 - `sync-workflow` (recommended, runs `runpod-launch.sh` flow)
 - `/workspace/sync-workflow.sh`
+- `workflow-install` (one-command workflow installer via ComfyWizardUI API)
+- `/workspace/workflow-install.sh`
 - `hf-model` (download a single HF file from repo-id+path or URL)
 - `/workspace/hf-model.sh`
 - `civitai-model` (download from CivitAI model/version id or URL)
