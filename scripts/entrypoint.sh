@@ -82,8 +82,39 @@ append_unique_keys() {
   done <<< "$key_block"
 }
 
+ensure_ssh_server() {
+  if [[ -x /usr/sbin/sshd && -f /etc/ssh/sshd_config ]]; then
+    return 0
+  fi
+
+  echo "[comfyui-wizard-image] SSH server binaries/config missing, attempting runtime install"
+  if command -v apt-get >/dev/null 2>&1; then
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y --no-install-recommends openssh-server openssh-client
+    rm -rf /var/lib/apt/lists/*
+  else
+    echo "[comfyui-wizard-image] ERROR: openssh-server missing and apt-get is unavailable; cannot bootstrap SSH." >&2
+    exit 1
+  fi
+
+  if [[ ! -f /etc/ssh/sshd_config ]]; then
+    cat > /etc/ssh/sshd_config <<'EOF'
+Include /etc/ssh/sshd_config.d/*.conf
+Port 22
+PermitRootLogin prohibit-password
+PubkeyAuthentication yes
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+UsePAM yes
+Subsystem sftp /usr/lib/openssh/sftp-server
+EOF
+  fi
+}
+
 start_sshd() {
   echo "[comfyui-wizard-image] Preparing SSH daemon"
+  ensure_ssh_server
   mkdir -p "$SSH_DIR" /run/sshd
   chmod 700 "$SSH_DIR"
   touch "$AUTHORIZED_KEYS"
@@ -91,6 +122,10 @@ start_sshd() {
   # Keep RunPod-injected keys and append env keys without duplicates.
   append_unique_keys "${PUBLIC_KEY:-}"
   append_unique_keys "${SSH_PUBLIC_KEY:-}"
+  awk 'NF && !seen[$0]++' "$AUTHORIZED_KEYS" > "${AUTHORIZED_KEYS}.tmp" || true
+  if [[ -f "${AUTHORIZED_KEYS}.tmp" ]]; then
+    mv "${AUTHORIZED_KEYS}.tmp" "$AUTHORIZED_KEYS"
+  fi
   chmod 600 "$AUTHORIZED_KEYS"
 
   if [[ ! -s "$AUTHORIZED_KEYS" ]]; then
@@ -98,6 +133,15 @@ start_sshd() {
   fi
 
   ssh-keygen -A >/dev/null 2>&1 || true
+  if ! /usr/sbin/sshd -t >/tmp/sshd.log 2>&1; then
+    echo "[comfyui-wizard-image] ERROR: sshd config validation failed. See /tmp/sshd.log" >&2
+    exit 1
+  fi
+
+  if [[ -n "${RUNPOD_PUBLIC_IP:-}" && -n "${RUNPOD_TCP_PORT_22:-}" ]]; then
+    echo "[comfyui-wizard-image] Direct TCP SSH endpoint: ${RUNPOD_PUBLIC_IP}:${RUNPOD_TCP_PORT_22} -> :22"
+  fi
+
   /usr/sbin/sshd -D >/tmp/sshd.log 2>&1 &
   SSHD_PID=$!
 

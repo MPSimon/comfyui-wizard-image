@@ -76,6 +76,8 @@ On Blackwell cards, startup also patches WanVideoWrapper so `attention_mode=sage
   - `CIVITAI_TOKEN=<CivitAI token>` (optional)
 
 RunPod maps internal `22` to a dynamic external TCP port on startup. Find the mapping in the Pod `Connect` tab under `Direct TCP Ports`.
+If RunPod exposes env vars in your pod, the startup logs will also print:
+- `RUNPOD_PUBLIC_IP:RUNPOD_TCP_PORT_22 -> :22`
 
 ## SSH / SCP / SFTP
 - SSH:
@@ -84,6 +86,10 @@ RunPod maps internal `22` to a dynamic external TCP port on startup. Find the ma
   - `scp -P <external_ssh_port> ./local.file root@<public_ip>:/workspace/`
 - SFTP:
   - `sftp -oPort=<external_ssh_port> root@<public_ip>`
+
+Tips:
+- Internal port stays fixed at `22`; only the external port is dynamic.
+- You cannot force shared RunPod TCP to always use external `22`; use the mapped external port shown by RunPod.
 
 Key handling behavior:
 - RunPod auto-injected account keys in `/root/.ssh/authorized_keys` remain intact.
